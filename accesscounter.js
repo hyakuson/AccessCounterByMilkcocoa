@@ -1,17 +1,27 @@
 (function () {
+    'use strict';
     window.accesscounter = {
+
         start: function (site, page) {
             if (!(site && page)) {
                 console.log("ERROR!! : please set sitename and pagename");
                 return;
             }
-            var milkcocoa = new MilkCocoa("onicovyhpw.mlkcca.com"); //←ここはあなたのMilkcocoaアプリのに変えてください
-            var dsPage = milkcocoa.dataStore('access_count').child(site).child(page);
+            var milkcocoa = new window.MilkCocoa("onicovyhpw.mlkcca.com"), //←ここはあなたのMilkcocoaアプリのに変えてください
+                dsPage = milkcocoa.dataStore('access_count').child(site).child(page),
 
-            var now = new Date();
-            var strToday = now.getFullYear() + "/" + ("0" + (now.getMonth() + 1)).slice(-2) + "/" + ("0" + now.getDate()).slice(-2);
+                now = new Date(),
+                strToday = now.getFullYear() + "/" + ("0" + (now.getMonth() + 1)).slice(-2) + "/" + ("0" + now.getDate()).slice(-2),
 
-            var todayCountId = strToday;
+                todayCountId = strToday,
+                totalCountId = "TotalCount_Page",
+                siteTotalCountId = "TotalCount_Site",
+                siteDayTotalCountId = strToday,
+
+                dsSite = milkcocoa.dataStore('access_count').child(site); // サイト全体のアクセスカウント用DS
+
+
+            /*** ページごとのアクセス数 ***/
 
             // 日ごとのページへのアクセス数をカウント
             dsPage.get(todayCountId, function (err, datum) {
@@ -26,16 +36,14 @@
                     }
                     return;
                 }
-                var todayAccess = datum.value.count * 1;
-                todayAccess++;
+                var todayAccess = Number(datum.value.count);
+                todayAccess = todayAccess + 1;
                 dsPage.set(todayCountId, {
                     "count": todayAccess.toString(10)
                 });
             });
 
-            var totalCountId = "TotalCount_Page";
-
-            // ページのトータルアクセス数をカウント
+            // トータルアクセス数をカウント
             dsPage.get(totalCountId, function (err, datum) {
                 if (err) {
                     if (err === "not found") {
@@ -47,8 +55,8 @@
                     }
                     return;
                 }
-                var totalPageAccess = datum.value.count * 1;
-                totalPageAccess++;
+                var totalPageAccess = Number(datum.value.count);
+                totalPageAccess = totalPageAccess + 1;
                 dsPage.set(totalCountId, {
                     "count": totalPageAccess.toString(10)
                 });
@@ -56,10 +64,6 @@
 
 
             /***サイト全体のカウント***/
-
-            var dsSite = milkcocoa.dataStore('access_count').child(site);
-
-            var siteDayTotalCountId = strToday;
 
             // 日ごとのサイト全体へのアクセス数をカウント
             dsSite.get(siteDayTotalCountId, function (err, datum) {
@@ -69,18 +73,16 @@
                             "count": "1"
                         });
                     } else {
-                        console.log(err);
+                        console.log("ERROR: " + err);
                     }
                     return;
                 }
-                var totalDaySiteAccess = datum.value.count * 1;
-                totalDaySiteAccess++;
+                var totalDaySiteAccess = Number(datum.value.count);
+                totalDaySiteAccess = totalDaySiteAccess + 1;
                 dsSite.set(siteDayTotalCountId, {
                     "count": totalDaySiteAccess.toString(10)
                 });
             });
-
-            var siteTotalCountId = "TotalCount_Site";
 
             // サイト全体のトータルアクセス数をカウント
             dsSite.get(siteTotalCountId, function (err, datum) {
@@ -94,12 +96,12 @@
                     }
                     return;
                 }
-                var totalSiteAccess = datum.value.count * 1;
-                totalSiteAccess++;
+                var totalSiteAccess = Number(datum.value.count);
+                totalSiteAccess = totalSiteAccess + 1;
                 dsSite.set(siteTotalCountId, {
                     "count": totalSiteAccess.toString(10)
                 });
             });
         }
-    }
-})();
+    };
+}());
