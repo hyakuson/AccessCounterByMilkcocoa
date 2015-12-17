@@ -3,12 +3,17 @@
     window.accesscounter = {
 
         start: function (site, page) {
-            if (!(site && page)) {
-                console.log("ERROR!! : please set sitename and pagename");
-                return;
+            if (!site) {
+                site = location.hostname || "localhost";
             }
-            var milkcocoa = new window.MilkCocoa("onicovyhpw.mlkcca.com"), //←ここはあなたのMilkcocoaアプリのに変えてください
-                dsPage = milkcocoa.dataStore('access_count').child(site).child(page),
+            if (!page) {
+                page = location.pathname;
+            }
+
+            var mk = new window.MilkCocoa("onicovyhpw.mlkcca.com"),
+
+                dsSite = mk.dataStore(site), // サイト全体のアクセスカウント用DS
+                dsPage = mk.dataStore(site).child(page),
 
                 now = new Date(),
                 strToday = now.getFullYear() + "/" + ("0" + (now.getMonth() + 1)).slice(-2) + "/" + ("0" + now.getDate()).slice(-2),
@@ -16,92 +21,50 @@
                 todayCountId = strToday,
                 totalCountId = "TotalCount_Page",
                 siteTotalCountId = "TotalCount_Site",
-                siteDayTotalCountId = strToday,
+                siteDayTotalCountId = strToday;
 
-                dsSite = milkcocoa.dataStore('access_count').child(site); // サイト全体のアクセスカウント用DS
+            function accessCount(id, pageOrSite) {
+                var ds;
+                if (pageOrSite === "page") {
+                    ds = dsPage;
+                } else if (pageOrSite === "site") {
+                    ds = dsSite;
+                }
 
+                ds.get(id, function (err, datum) {
+                    if (err) {
+                        // 初回はデータがなくてエラーになるので初期データをセットする
+                        if (err === "not found") {
+                            ds.set(id, {
+                                "count": "1"
+                            });
+                        } else {
+                            window.console.log(err);
+                        }
+                        return;
+                    }
+                    ds.set(id, {
+                        "count": (Number(datum.value.count) + 1).toString()
+                    });
+                });
+            }
 
             /*** ページごとのアクセス数 ***/
 
             // 日ごとのページへのアクセス数をカウント
-            dsPage.get(todayCountId, function (err, datum) {
-                if (err) {
-                    // 初回はデータがなくてエラーになるので初期データをセットする
-                    if (err === "not found") {
-                        dsPage.set(todayCountId, {
-                            "count": "1"
-                        });
-                    } else {
-                        console.log(err);
-                    }
-                    return;
-                }
-                var todayAccess = Number(datum.value.count);
-                todayAccess = todayAccess + 1;
-                dsPage.set(todayCountId, {
-                    "count": todayAccess.toString(10)
-                });
-            });
+            accessCount(todayCountId, "page");
 
             // トータルアクセス数をカウント
-            dsPage.get(totalCountId, function (err, datum) {
-                if (err) {
-                    if (err === "not found") {
-                        dsPage.set(totalCountId, {
-                            "count": "1"
-                        });
-                    } else {
-                        console.log(err);
-                    }
-                    return;
-                }
-                var totalPageAccess = Number(datum.value.count);
-                totalPageAccess = totalPageAccess + 1;
-                dsPage.set(totalCountId, {
-                    "count": totalPageAccess.toString(10)
-                });
-            });
+            accessCount(totalCountId, "page");
 
 
             /***サイト全体のカウント***/
 
             // 日ごとのサイト全体へのアクセス数をカウント
-            dsSite.get(siteDayTotalCountId, function (err, datum) {
-                if (err) {
-                    if (err === "not found") {
-                        dsSite.set(siteDayTotalCountId, {
-                            "count": "1"
-                        });
-                    } else {
-                        console.log("ERROR: " + err);
-                    }
-                    return;
-                }
-                var totalDaySiteAccess = Number(datum.value.count);
-                totalDaySiteAccess = totalDaySiteAccess + 1;
-                dsSite.set(siteDayTotalCountId, {
-                    "count": totalDaySiteAccess.toString(10)
-                });
-            });
+            accessCount(siteDayTotalCountId, "site");
 
-            // サイト全体のトータルアクセス数をカウント
-            dsSite.get(siteTotalCountId, function (err, datum) {
-                if (err) {
-                    if (err === "not found") {
-                        dsSite.set(siteTotalCountId, {
-                            "count": "1"
-                        });
-                    } else {
-                        console.log(err);
-                    }
-                    return;
-                }
-                var totalSiteAccess = Number(datum.value.count);
-                totalSiteAccess = totalSiteAccess + 1;
-                dsSite.set(siteTotalCountId, {
-                    "count": totalSiteAccess.toString(10)
-                });
-            });
+            // 全日のサイト全体へのアクセス数をカウント
+            accessCount(siteTotalCountId, "site");
         }
     };
 }());
