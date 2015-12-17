@@ -10,11 +10,9 @@
                 page = location.pathname;
             }
 
-            var mk = new window.MilkCocoa("onicovyhpw.mlkcca.com"),
-
-                dsSite = mk.dataStore(site), // サイト全体のアクセスカウント用DS
-                dsPage = mk.dataStore(site).child(page),
-
+            var mk,
+                dsSite, // サイト全体のアクセス数用
+                dsPage, // ページ単位のアクセス数用
                 now = new Date(),
                 strToday = now.getFullYear() + "/" + ("0" + (now.getMonth() + 1)).slice(-2) + "/" + ("0" + now.getDate()).slice(-2),
 
@@ -24,11 +22,13 @@
                 siteDayTotalCountId = strToday;
 
             function accessCount(id, pageOrSite) {
-                var ds;
+                var mk = new window.MilkCocoa("onicovyhpw.mlkcca.com"),
+                    ds;
+
                 if (pageOrSite === "page") {
-                    ds = dsPage;
+                    ds = mk.dataStore(site).child(page);
                 } else if (pageOrSite === "site") {
-                    ds = dsSite;
+                    ds = mk.dataStore(site);
                 }
 
                 ds.get(id, function (err, datum) {
@@ -37,6 +37,8 @@
                         if (err === "not found") {
                             ds.set(id, {
                                 "count": "1"
+                            }, function (err, datum) {
+                                mk.disconnect();
                             });
                         } else {
                             window.console.log(err);
@@ -45,6 +47,8 @@
                     }
                     ds.set(id, {
                         "count": (Number(datum.value.count) + 1).toString()
+                    }, function (err, datum) {
+                        mk.disconnect();
                     });
                 });
             }
