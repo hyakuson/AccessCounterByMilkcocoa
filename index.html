@@ -15,6 +15,22 @@
     <script>
         accesscounter.start();
     </script>
+    <script>
+        var mk = new window.MilkCocoa("onicovyhpw.mlkcca.com"),
+            ds;
+        site = location.hostname || "localhost";
+        page = location.pathname;
+
+        ds = mk.dataStore(site);
+
+        ds.get('TotalCount_Site', function (err, datum) {
+            var count = datum.value.count;
+
+            document.getElementById('accessCounter').textContent = 'TotalCount : ' + count.toString();
+
+            mk.disconnect();
+        });
+    </script>
 </body>
 
 </html>
